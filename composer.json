@@ -1,0 +1,25 @@
+{
+    "name": "assegaiphp/common",
+    "description": "The assegai/common package is a collection of commonly used utility classes and functions for AssegaiPHP projects. This package provides a set of tools that are designed to make it easier for developers to perform common tasks such as working with arrays, strings, and paths. The package also includes classes for handling errors and logging, as well as a simple yet powerful configuration management system. The package is designed to be lightweight, with minimal dependencies, and is fully compatible with any AssegaiPHP based project. Whether you're building a small web application or a large enterprise system, assegai/common provides the essential building blocks you need to get started quickly and easily.",
+    "type": "library",
+    "require-dev": {
+        "codeception/codeception": "^5.0",
+        "codeception/module-phpbrowser": "*",
+        "codeception/module-asserts": "*"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Assegai\\Common\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Andrew Masiye",
+            "email": "andrew.masiye@assegaihphp.com"
+        }
+    ],
+    "require": {
+        "assegaiphp/core": "^0.3.5"
+    }
+}
