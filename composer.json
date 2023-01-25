@@ -5,7 +5,8 @@
     "require-dev": {
         "codeception/codeception": "^5.0",
         "codeception/module-phpbrowser": "*",
-        "codeception/module-asserts": "*"
+        "codeception/module-asserts": "*",
+        "codeception/verify": "^2.2"
     },
     "license": "MIT",
     "autoload": {
@@ -20,6 +21,7 @@
         }
     ],
     "require": {
-        "assegaiphp/core": "^0.3.5"
+        "assegaiphp/core": "^0.3.5",
+        "guzzlehttp/guzzle": "^7.5"
     }
 }
