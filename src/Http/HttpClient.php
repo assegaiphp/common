@@ -2,7 +2,7 @@
 
 namespace Assegai\Common\Http;
 
-use Assegai\Core\Attributes\Injectable;
+use Assegai\Attributes\Injectable;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
