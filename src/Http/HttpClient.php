@@ -47,8 +47,7 @@ readonly class HttpClient implements ClientInterface
     };
 
     $body = http_build_query($data);
-    if ($body)
-    {
+    if ($body) {
       $url .= "?$body";
     }
     $request = new Request('GET', $url, $headers, $body);
