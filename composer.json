@@ -21,7 +21,10 @@
         }
     ],
     "require": {
-        "assegaiphp/core": "^0.3.5",
-        "guzzlehttp/guzzle": "^7.5"
+        "php": ">=8.3",
+        "guzzlehttp/guzzle": "^7.5",
+        "assegaiphp/attributes": "^10.1",
+        "symfony/console": "^6.4",
+        "psr/log": "^3.0"
     }
 }
