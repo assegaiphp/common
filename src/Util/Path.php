@@ -5,9 +5,11 @@ namespace Assegai\Common\Util;
 use Assegai\Common\Util\Exceptions\PathException;
 
 /**
+ * The Path class provides utility methods for working with file and directory paths.
  *
+ * @package Assegai\Common\Util
  */
-class Path
+readonly class Path
 {
   /**
    * Constructs a new Path object.

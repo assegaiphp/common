@@ -2,10 +2,15 @@
 
 namespace Assegai\Common\Util\Exceptions;
 
-use Assegai\Core\Util\Debug\Console\Enumerations\Color;
+use Assegai\Common\Util\Enumerations\Color;
 use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 
+/**
+ * Class ClientException
+ *
+ * @package Assegai\Common\Util\Exceptions
+ */
 class ClientException extends Exception implements ClientExceptionInterface
 {
   public function __construct(string $message)
