@@ -2,9 +2,15 @@
 
 namespace Assegai\Common\Util\Exceptions;
 
-use Assegai\Core\Util\Debug\Console\Enumerations\Color;
+use Assegai\Common\Util\Enumerations\Color;
+use Exception;
 
-class UtilException extends \Exception
+/**
+ * Class UtilException
+ *
+ * @package Assegai\Common\Util\Exceptions
+ */
+class UtilException extends Exception
 {
   public function __construct(string $message = "", string $prefix = "Util Error")
   {
