@@ -15,5 +15,5 @@ enum QueueType: string
   case SQS = 'sqs';
   case Kafka = 'kafka';
   case InMemory = 'in_memory';
-  case Beanstalkd = 'beanstalkd';
+  case Beanstalkd = 'beanstalk';
 }
