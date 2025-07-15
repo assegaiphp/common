@@ -41,4 +41,12 @@ interface QueueInterface
    * @return int The number of jobs in the queue.
    */
   public function getTotalJobs(): int;
+
+  /**
+   * Creates a new instance of the queue with the given configuration.
+   *
+   * @param array $config Configuration options for the queue.
+   * @return static A new instance of the queue.
+   */
+  public static function create(array $config): self;
 }
