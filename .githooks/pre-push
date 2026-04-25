@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if [ ! -f composer.json ]; then
+  exit 0
+fi
+
+has_composer_script() {
+  php -r '
+    $composer = json_decode(file_get_contents("composer.json"), true);
+    exit(isset($composer["scripts"][$argv[1]]) ? 0 : 1);
+  ' "$1"
+}
+
+run_composer_script() {
+  local script="$1"
+
+  if has_composer_script "$script"; then
+    printf "\n==> composer %s\n" "$script"
+    composer "$script"
+  fi
+}
+
+run_composer_script analyze
+run_composer_script test
