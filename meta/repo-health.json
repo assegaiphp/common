@@ -1,0 +1,15 @@
+{
+  "repository": "assegaiphp/common",
+  "package": "assegaiphp/common",
+  "php": ">=8.4",
+  "license": "MIT",
+  "ci": {
+    "workflow": "php.yml",
+    "label": "tests"
+  },
+  "status": {
+    "label": "active",
+    "color": "10b981",
+    "summary": "Common HTTP and support utilities with a green local Pest lane."
+  }
+}
