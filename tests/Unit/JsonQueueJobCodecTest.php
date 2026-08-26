@@ -32,6 +32,67 @@ final readonly class QueueCodecJob
   }
 }
 
+class QueueCodecPrivateParent
+{
+  public function __construct(private string $secret)
+  {
+  }
+
+  public function secret(): string
+  {
+    return $this->secret;
+  }
+}
+
+final class QueueCodecPrivateChild extends QueueCodecPrivateParent
+{
+}
+
+final readonly class QueueCodecArrayJob
+{
+  /**
+   * @param array<string, mixed> $data
+   */
+  public function __construct(public array $data)
+  {
+  }
+}
+
+interface QueueCodecFirstContract
+{
+}
+
+interface QueueCodecSecondContract
+{
+}
+
+final readonly class QueueCodecIntersectionValue implements QueueCodecFirstContract, QueueCodecSecondContract
+{
+  public function __construct(public string $name)
+  {
+  }
+}
+
+final readonly class QueueCodecIntersectionJob
+{
+  public function __construct(public QueueCodecFirstContract&QueueCodecSecondContract $value)
+  {
+  }
+}
+
+class QueueCodecRelativeScopeParent
+{
+  public ?self $propertyPeer = null;
+
+  public function __construct(public ?self $constructorPeer = null)
+  {
+  }
+}
+
+final class QueueCodecRelativeScopeChild extends QueueCodecRelativeScopeParent
+{
+}
+
 final class QueueCodecProcessor
 {
   public function process(QueueCodecJob $job): void
@@ -82,6 +143,47 @@ describe('JSON queue job codec', function (): void {
     expect($decoded)->toBeInstanceOf(QueueCodecJob::class);
     expect($decoded->recipient)->toBeInstanceOf(QueueCodecRecipient::class);
     expect($decoded->status)->toBe(QueueCodecStatus::Pending);
+  });
+
+  it('preserves private state declared by ancestor classes', function (): void {
+    $codec = new JsonQueueJobCodec();
+    $encoded = $codec->encode(new QueueCodecPrivateChild('inherited-secret'));
+    $decoded = $codec->decode($encoded, QueueCodecPrivateChild::class);
+
+    expect($decoded)->toBeInstanceOf(QueueCodecPrivateChild::class);
+    expect($decoded->secret())->toBe('inherited-secret');
+  });
+
+  it('keeps nested associative values as arrays in legacy array properties', function (): void {
+    $codec = new JsonQueueJobCodec();
+    $decoded = $codec->decode('{"data":{"first":{"second":1}}}', QueueCodecArrayJob::class);
+
+    expect($decoded)->toBeInstanceOf(QueueCodecArrayJob::class);
+    expect($decoded->data)->toBe(['first' => ['second' => 1]]);
+  });
+
+  it('hydrates encoded objects that satisfy intersection-typed properties', function (): void {
+    $codec = new JsonQueueJobCodec();
+    $original = new QueueCodecIntersectionJob(new QueueCodecIntersectionValue('both'));
+    $decoded = $codec->decode($codec->encode($original), QueueCodecIntersectionJob::class);
+
+    expect($decoded)->toBeInstanceOf(QueueCodecIntersectionJob::class);
+    expect($decoded->value)->toBeInstanceOf(QueueCodecIntersectionValue::class);
+    expect($decoded->value->name)->toBe('both');
+  });
+
+  it('resolves inherited relative types in their declaring class scope', function (): void {
+    $codec = new JsonQueueJobCodec();
+    $peer = new QueueCodecRelativeScopeParent();
+    $original = new QueueCodecRelativeScopeChild($peer);
+    $original->propertyPeer = $peer;
+    $decoded = $codec->decode($codec->encode($original), QueueCodecRelativeScopeChild::class);
+
+    expect($decoded)->toBeInstanceOf(QueueCodecRelativeScopeChild::class);
+    expect($decoded->constructorPeer)->toBeInstanceOf(QueueCodecRelativeScopeParent::class);
+    expect($decoded->constructorPeer::class)->toBe(QueueCodecRelativeScopeParent::class);
+    expect($decoded->propertyPeer)->toBeInstanceOf(QueueCodecRelativeScopeParent::class);
+    expect($decoded->propertyPeer::class)->toBe(QueueCodecRelativeScopeParent::class);
   });
 
   it('returns stdClass for untyped processors without instantiating envelope classes', function (): void {

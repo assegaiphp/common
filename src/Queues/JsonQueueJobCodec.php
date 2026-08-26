@@ -11,6 +11,7 @@ use DateTimeInterface;
 use ReflectionClass;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
+use ReflectionProperty;
 use ReflectionType;
 use ReflectionUnionType;
 use SplObjectStorage;
@@ -103,8 +104,8 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
       $values = [];
       $reflection = new ReflectionClass($object);
 
-      foreach ($reflection->getProperties() as $property) {
-        if ($property->isStatic() || !$property->isInitialized($object)) {
+      foreach ($this->instanceProperties($reflection) as $property) {
+        if (!$property->isInitialized($object)) {
           continue;
         }
 
@@ -121,6 +122,37 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
     } finally {
       unset($seen[$object]);
     }
+  }
+
+  /**
+   * Returns every instance property in its declaring scope, including private
+   * properties inherited from ancestor classes.
+   *
+   * @return array<string, ReflectionProperty>
+   */
+  private function instanceProperties(ReflectionClass $reflection): array
+  {
+    $properties = [];
+
+    for ($scope = $reflection; $scope !== false; $scope = $scope->getParentClass()) {
+      foreach ($scope->getProperties() as $property) {
+        if ($property->isStatic() || $property->getDeclaringClass()->getName() !== $scope->getName()) {
+          continue;
+        }
+
+        $name = $property->getName();
+
+        if (isset($properties[$name])) {
+          throw new QueueException(
+            "Queue job class '{$reflection->getName()}' contains multiple instance properties named '{$name}'."
+          );
+        }
+
+        $properties[$name] = $property;
+      }
+    }
+
+    return $properties;
   }
 
   private function normalizeValue(mixed $value, SplObjectStorage $seen): mixed
@@ -234,6 +266,7 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
     }
 
     $constructor = $reflection->getConstructor();
+    $properties = $this->instanceProperties($reflection);
     $consumed = [];
     $arguments = [];
 
@@ -255,7 +288,8 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
           throw new QueueException("Queue job '{$class}' is missing constructor value '{$name}'.");
         }
 
-        $value = $this->hydrateValue($payload[$name], $parameter->getType(), $reflection, $normalized);
+        $scope = $parameter->getDeclaringClass() ?? $reflection;
+        $value = $this->hydrateValue($payload[$name], $parameter->getType(), $scope, $normalized);
         $consumed[$name] = true;
 
         if ($parameter->isVariadic()) {
@@ -274,19 +308,19 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
     $job = $reflection->newInstanceArgs($arguments);
 
     foreach ($payload as $name => $value) {
-      if (isset($consumed[$name]) || !$reflection->hasProperty((string) $name)) {
+      $property = $properties[(string) $name] ?? null;
+
+      if (isset($consumed[$name]) || !$property instanceof ReflectionProperty) {
         continue;
       }
 
-      $property = $reflection->getProperty((string) $name);
-
-      if ($property->isStatic() || ($property->isReadOnly() && $property->isInitialized($job))) {
+      if ($property->isReadOnly() && $property->isInitialized($job)) {
         continue;
       }
 
       $property->setValue(
         $job,
-        $this->hydrateValue($value, $property->getType(), $reflection, $normalized)
+        $this->hydrateValue($value, $property->getType(), $property->getDeclaringClass(), $normalized)
       );
     }
 
@@ -342,6 +376,22 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
     ReflectionClass $scope,
     bool $normalized,
   ): object {
+    if ($normalized && $this->isValueEnvelope($value)) {
+      $metadata = $value[self::VALUE_KEY];
+
+      if (($metadata['type'] ?? null) !== 'object') {
+        throw new QueueException("Queue job value does not match intersection type '{$type}'.");
+      }
+
+      $expectedClasses = [];
+
+      foreach ($type->getTypes() as $member) {
+        $expectedClasses[] = $this->resolveTypeName($member->getName(), $scope);
+      }
+
+      return $this->hydrateObjectEnvelope($metadata, $expectedClasses);
+    }
+
     $candidate = $this->hydrateUntypedValue($value, $normalized);
 
     if (!is_object($candidate)) {
@@ -410,13 +460,7 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
   private function hydrateBuiltin(mixed $value, string $type, bool $normalized): mixed
   {
     if (!$normalized && ($type === 'array' || $type === 'iterable') && is_array($value)) {
-      $items = [];
-
-      foreach ($value as $key => $item) {
-        $items[$key] = $this->hydrateUntypedValue($item, false);
-      }
-
-      return $items;
+      return $value;
     }
 
     $value = $this->hydrateUntypedValue($value, $normalized);
@@ -505,13 +549,7 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
 
       $expectedClass = $this->resolveTypeName($expectedType->getName(), $scope);
 
-      if (!$this->typeExists($encodedClass) || !is_a($encodedClass, $expectedClass, true)) {
-        throw new QueueException(
-          "Encoded nested job value '{$encodedClass}' is not compatible with '{$expectedClass}'."
-        );
-      }
-
-      return $this->hydrateObject($encodedClass, $properties, true);
+      return $this->hydrateObjectEnvelope($metadata, [$expectedClass]);
     }
 
     if ($kind === 'enum') {
@@ -577,6 +615,30 @@ final class JsonQueueJobCodec implements QueueJobCodecInterface
     }
 
     throw new QueueException('Unknown value type in queue job envelope.');
+  }
+
+  /**
+   * @param array<string, mixed> $metadata
+   * @param list<class-string> $expectedClasses
+   */
+  private function hydrateObjectEnvelope(array $metadata, array $expectedClasses): object
+  {
+    $properties = $metadata['properties'] ?? null;
+    $encodedClass = $metadata['class'] ?? null;
+
+    if (!is_array($properties) || !is_string($encodedClass) || !$this->typeExists($encodedClass)) {
+      throw new QueueException('Malformed object value in queue job envelope.');
+    }
+
+    foreach ($expectedClasses as $expectedClass) {
+      if (!is_a($encodedClass, $expectedClass, true)) {
+        throw new QueueException(
+          "Encoded nested job value '{$encodedClass}' is not compatible with '{$expectedClass}'."
+        );
+      }
+    }
+
+    return $this->hydrateObject($encodedClass, $properties, true);
   }
 
   private function hydrateUntypedValue(mixed $value, bool $normalized): mixed
