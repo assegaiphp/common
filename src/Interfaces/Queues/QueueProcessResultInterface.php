@@ -8,7 +8,7 @@ use Throwable;
  * Interface QueueProcessResultInterface
  *
  * Defines the methods for handling the result of processing a job in a queue.
- * @template T
+ * @template T of object
  */
 interface QueueProcessResultInterface
 {
@@ -48,9 +48,12 @@ interface QueueProcessResultInterface
   public function getNextError(): ?Throwable;
 
   /**
-   * Returns the job that was processed.
+   * Returns the hydrated job associated with this delivery attempt.
    *
-   * @return object|null The job that was processed, or null if no job was processed.
+   * This remains available for failed callbacks. Null means that no transport
+   * delivery was available or that a job could not be decoded.
+   *
+   * @return object|null The hydrated job, or null when no job could be produced.
    */
   public function getJob(): ?object;
 }

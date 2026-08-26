@@ -20,6 +20,7 @@ Welcome to the AssegaiPHP common library! This package provides a set of common 
 The package includes the following features:
 
 - HttpClient class: A simple and flexible class for performing HTTP requests. It supports `GET`, `POST`, `PUT`, `DELETE` and other request methods, and can also handle request headers and parameters.
+- Queue contracts: Versioned JSON job encoding, callback job-type discovery, typed hydration, and canonical one-delivery process results shared by first-party queue drivers.
 - Utility classes: A collection of classes for common tasks such as logging, path manipulation, and more.
 
 All classes are designed to be injectable and can be easily integrated into any AssegaiPHP application.
@@ -41,6 +42,8 @@ You can then use the classes in your application by importing the namespace:
 ```PHP
 use Assegai\Common\Http\HttpClient;
 ```
+
+Queue transports use `JsonQueueJobCodec` to preserve a job's top-level class and JSON-safe state. During consumption, `QueueJobTypeResolver` reads the processor's first parameter and the codec hydrates that declared domain type. Legacy JSON objects remain readable, while processors declared only as `object` receive `stdClass`.
 
 You can also use the `#[Injectable]` attribute to easily inject the HttpClient class into your controllers and services.
 
