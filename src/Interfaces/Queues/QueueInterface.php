@@ -6,25 +6,29 @@ namespace Assegai\Common\Interfaces\Queues;
  * Interface QueueInterface
  *
  * Defines the methods for managing a queue of jobs.
- * @template T
- * @template-extends QueueProcessResultInterface<T>
+ * @template T of object
  */
 interface QueueInterface
 {
   /**
    * Adds a job to the queue.
    *
-   * @param object<T> $job The job to be added to the queue. It can be an object or an array.
+   * @param T $job The job to be added to the queue.
    * @param object|array|null $options Optional parameters for the job, such as priority or delay.
    */
   public function add(object $job, object|array|null $options = null): void;
 
   /**
-   * Processes the next job in the queue.
+   * Processes at most one available job from the queue.
    *
-   * @param callable $callback A callback function that will be called with the job to process.
+   * The callback receives a hydrated domain object. A successful result must
+   * expose that object through getJob(); an empty queue returns a successful
+   * result whose job is null. Implementations must settle the transport
+   * delivery only after the callback succeeds, and must capture any Throwable
+   * raised while decoding or processing a delivery.
    *
-   * @return QueueProcessResultInterface The result of processing the job, or null if no jobs are available.
+   * @param callable(T): mixed $callback A callback invoked with the hydrated job.
+   * @return QueueProcessResultInterface<T> The result of the delivery attempt.
    */
   public function process(callable $callback): QueueProcessResultInterface;
 
