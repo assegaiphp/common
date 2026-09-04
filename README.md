@@ -1,5 +1,5 @@
 <div align="center" style="padding-bottom: 48px">
-    <a href="https://assegaiphp.com/" target="blank"><img src="https://assegaiphp.com/images/logos/logo-cropped.png" width="200" alt="Assegai Logo"></a>
+  <a href="https://assegaiphp.com/" target="blank"><img src="https://assegaiphp.com/images/logos/logo-cropped.png" width="200" alt="AssegaiPHP Logo"></a>
 </div>
 
 <p align="center">
@@ -10,43 +10,50 @@
   <img alt="Status active" src="https://img.shields.io/badge/status-active-10b981?style=flat-square">
 </p>
 
-<p align="center">A progressive <a href="https://php.net">PHP</a> framework for building effecient and scalable server-side applications.</p>
+# AssegaiPHP Common
 
+<p align="center">Shared HTTP, logging, path, exception, and queue primitives for AssegaiPHP packages.</p>
 
-# AssegaiPHP Common Library
+`assegaiphp/common` contains the small contracts and implementations that need to remain consistent across the framework ecosystem. It is infrastructure for first-party packages, not the AssegaiPHP application framework itself.
 
-Welcome to the AssegaiPHP common library! This package provides a set of common classes and utilities that can be used in any AssegaiPHP project.
+The package currently provides:
 
-The package includes the following features:
+- an injectable HTTP client
+- PSR-3-compatible logging support
+- shared framework and HTTP exceptions
+- path helpers and terminal color enumerations
+- queue interfaces, typed job encoding, job-type discovery, and process results used by the official queue transports
 
-- HttpClient class: A simple and flexible class for performing HTTP requests. It supports `GET`, `POST`, `PUT`, `DELETE` and other request methods, and can also handle request headers and parameters.
-- Queue contracts: Versioned JSON job encoding, callback job-type discovery, typed hydration, and canonical one-delivery process results shared by first-party queue drivers.
-- Utility classes: A collection of classes for common tasks such as logging, path manipulation, and more.
+## Requirements
 
-All classes are designed to be injectable and can be easily integrated into any AssegaiPHP application.
+- PHP 8.4 or newer
 
-## Contribution workflow
+## Installation
 
-For commit and pull request conventions in this repo, see:
-
-- [docs/commit-and-pr-guidelines.md](./docs/commit-and-pr-guidelines.md)
-
-To install the package, simply require it in your composer.json file:
-
-```BASH
+```bash
 composer require assegaiphp/common
 ```
 
-You can then use the classes in your application by importing the namespace:
+## HTTP client
 
-```PHP
+```php
 use Assegai\Common\Http\HttpClient;
+use GuzzleHttp\Client;
+
+$client = new HttpClient(new Client());
+$response = $client->get('https://example.com/api/status');
 ```
 
-Queue transports use `JsonQueueJobCodec` to preserve a job's top-level class and JSON-safe state. During consumption, `QueueJobTypeResolver` reads the processor's first parameter and the codec hydrates that declared domain type. Legacy JSON objects remain readable, while processors declared only as `object` receive `stdClass`.
+## Queue contracts
 
-You can also use the `#[Injectable]` attribute to easily inject the HttpClient class into your controllers and services.
+The queue contracts provide a transport-neutral boundary shared by packages such as `assegaiphp/beanstalkd` and `assegaiphp/rabbitmq`. `JsonQueueJobCodec` preserves a job's top-level class and JSON-safe state, while `QueueJobTypeResolver` discovers the domain type declared by a processor.
 
-We hope you find the AssegaiPHP common library useful in your projects! If you have any questions or feedback, please open an issue on the [GitHub] repository.
+Applications normally consume these contracts through Core dependency injection and the official queue packages rather than constructing the transport boundary directly.
 
-[GitHub]: https://github.com/assegaiphp/common
+## Contributing
+
+For contribution and pull request conventions, see [Commit and PR Guidelines](./docs/commit-and-pr-guidelines.md).
+
+## License
+
+This package is released under the [MIT license](./LICENSE).
