@@ -31,7 +31,7 @@ The package currently provides:
 ## Installation
 
 ```bash
-composer require assegaiphp/common
+composer require 'assegaiphp/common:~0.11.0'
 ```
 
 ## HTTP client

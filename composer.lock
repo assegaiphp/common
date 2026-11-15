@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9905fd53a3e55170db13a5c7afa2b33f",
+    "content-hash": "ac0d01144bbca17b41d874cba5785222",
     "packages": [
         {
             "name": "assegaiphp/attributes",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/assegaiphp/attributes.git",
-                "reference": "9c27f63c0f8baef777dc5c9c2cf7381d6f137594"
+                "reference": "454e4f0bedbab414d62c4045ccbf68ecb7bd6346"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/assegaiphp/attributes/zipball/9c27f63c0f8baef777dc5c9c2cf7381d6f137594",
-                "reference": "9c27f63c0f8baef777dc5c9c2cf7381d6f137594",
+                "url": "https://api.github.com/repos/assegaiphp/attributes/zipball/454e4f0bedbab414d62c4045ccbf68ecb7bd6346",
+                "reference": "454e4f0bedbab414d62c4045ccbf68ecb7bd6346",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.3"
+                "php": "^8.4"
             },
             "require-dev": {
                 "pestphp/pest": "^3.7",
@@ -46,9 +46,9 @@
             "description": "A small library defining the core attributes of the AssegaiPHP framework.",
             "support": {
                 "issues": "https://github.com/assegaiphp/attributes/issues",
-                "source": "https://github.com/assegaiphp/attributes/tree/1.0.2"
+                "source": "https://github.com/assegaiphp/attributes/tree/1.0.3"
             },
-            "time": "2025-05-13T08:05:07+00:00"
+            "time": "2026-04-25T18:01:51+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
