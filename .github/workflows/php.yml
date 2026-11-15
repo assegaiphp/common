@@ -2,7 +2,8 @@ name: PHP Composer
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "release/**" ]
+    tags: [ "*" ]
   pull_request:
     branches: [ "main", "develop" ]
 
@@ -10,7 +11,15 @@ permissions:
   contents: read
 
 jobs:
+  release-policy:
+    uses: assegaiphp/core/.github/workflows/package-policy.yml@d9f44d59d3157e55a342d101ff7157a907bf9796
+    with:
+      console-ref: 65750afa2bc4123e71151ba24b3798337c0a3de7
+      core-ref: 9a405927081cf3573faa38b9b87239c21707fae8
+      inventory: meta/releases/0.11.json
+
   build:
+    needs: release-policy
     runs-on: ubuntu-24.04
 
     strategy:
