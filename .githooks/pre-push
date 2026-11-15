@@ -14,7 +14,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   if [[ "$local_sha" =~ ^0+$ ]]; then
     continue
   fi
-  if [ "$local_sha" != "$(git rev-parse HEAD)" ] || ! git diff --quiet "$local_sha" -- composer.json; then
+  pushed_commit="$(git rev-parse --verify "${local_sha}^{commit}")"
+  git cat-file -e "${pushed_commit}:composer.json"
+  if [ "$pushed_commit" != "$(git rev-parse HEAD)" ] || ! git diff --quiet "$pushed_commit" -- composer.json; then
     printf '%s\n' 'Check out the pushed source and commit its Composer manifest before running the policy check.' >&2
     exit 1
   fi
