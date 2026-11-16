@@ -8,6 +8,30 @@ if [ ! -f composer.json ]; then
   exit 0
 fi
 
+policy_console="${ASSEGAI_RELEASE_CONSOLE:?Set ASSEGAI_RELEASE_CONSOLE to the reviewed Console policy checkout.}"
+policy_core="${ASSEGAI_RELEASE_CORE:?Set ASSEGAI_RELEASE_CORE to the reviewed Core data checkout.}"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [[ "$local_sha" =~ ^0+$ ]]; then
+    continue
+  fi
+  pushed_commit="$(git rev-parse --verify "${local_sha}^{commit}")"
+  git cat-file -e "${pushed_commit}:composer.json"
+  if [ "$pushed_commit" != "$(git rev-parse HEAD)" ] || ! git diff --quiet "$pushed_commit" -- composer.json; then
+    printf '%s\n' 'Check out the pushed source and commit its Composer manifest before running the policy check.' >&2
+    exit 1
+  fi
+  php "$policy_console/tools/release-check.php" \
+    --mode=consumer --purpose=current-train --format=json \
+    --console-root="$policy_console" --console-ref=d66c11df1916a08b10c9006862a2d8d7bfedd96f \
+    --core-root="$policy_core" --core-ref=9a405927081cf3573faa38b9b87239c21707fae8 \
+    --inventory="$policy_core/meta/releases/0.11.json" \
+    --modules="$policy_core/meta/framework-modules.json" \
+    --manifest="$repo_root/composer.json" \
+    --semver-autoload="$policy_console/tools/policy/vendor/autoload.php" \
+    --ref="$remote_ref"
+done
+
+
 has_composer_script() {
   php -r '
     $composer = json_decode(file_get_contents("composer.json"), true);
