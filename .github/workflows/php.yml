@@ -14,7 +14,7 @@ jobs:
   release-policy:
     uses: assegaiphp/core/.github/workflows/package-policy.yml@d9f44d59d3157e55a342d101ff7157a907bf9796
     with:
-      console-ref: b0e5478fe7dc40b031eb53c6334f0cd3b37aecca
+      console-ref: d66c11df1916a08b10c9006862a2d8d7bfedd96f
       core-ref: 9a405927081cf3573faa38b9b87239c21707fae8
       inventory: meta/releases/0.11.json
 
